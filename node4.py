@@ -4,7 +4,7 @@ import threading
 SERVER = 'localhost'
 PORT = 5003
 ADDR = (SERVER, PORT)
-PORT_ADDRS = [5000, 5002]
+PORT_ADDRS = [5004, 5002]
 FORMATO = 'UTF-8'
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(ADDR)
@@ -16,17 +16,17 @@ def recebimento_Server(conn, addr, PORT_ADDRS):
         msg = conn.recv(1024).decode(FORMATO)
         if not msg:
             break
-        print(f"O usuário: {addr} mandou mensagem!")
-        print('Ele mandou: ', msg)
+        print(f"O Usuário: {addr} Mandou Mensagem!")
+        print(f"Ele Mandou: [{msg.split('+')[-1]}] que Veio Pela Porta [{msg.split('+')[-2]}]")
         try:
             if ultima_mensagem[-1] == msg:
                 response = f'{addr} Essa Dai eu Já Ouvi!!\n'
                 print(f'EU: {response}')
                 conn.send(response.encode(FORMATO))
             else:
-                response = 'ME CONTE MAIS!'
+                response = f'ME CONTE MAIS!\n'
                 ultima_mensagem.append(msg)
-                print(f'EU: {response}')
+                print(f'EU: {response}\n')
                 conn.send(response.encode(FORMATO))
                 replicate_thread = threading.Thread(target=repasse_Cliente, args=[PORT_ADDRS, msg])
                 replicate_thread.start()
@@ -56,7 +56,7 @@ def repasse_Cliente(PORT_ADDRS, msg):
                 client_socket.send(msg.encode(FORMATO))
 
                 response, server = client_socket.recvfrom(1024)
-                print(f'O Vizinho Respondeu: {response.decode(FORMATO)}')
+                print(f'O Vizinho Respondeu: {response.decode(FORMATO)}\n')
                 client_socket.shutdown(socket.SHUT_RDWR)
             except:
                 print('\n\t\t[Erro ao Repassar a Mensagem!]\n')
@@ -67,11 +67,12 @@ def repasse_Cliente(PORT_ADDRS, msg):
 def mensagem_Cliente(PORT_ADDRS):
     while True:
         msg = input('Mande Uma Mensagem!\n')
+        msg = f'{PORT}+{msg}'
         ultima_mensagem.append(msg)
         for port in PORT_ADDRS:
             port_vizinho = ('localhost', int(port))
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client_socket.settimeout(1)
+            client_socket.settimeout(5)
             try:
                 client_socket.connect(port_vizinho)
                 client_socket.send(msg.encode(FORMATO))
